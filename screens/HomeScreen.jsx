@@ -55,7 +55,7 @@ export default function HomeScreen() {
 
   return (
     <LinearGradient
-      colors={["#0a0a0a", "#2a0934"]}
+      colors={[ "#2a0934", "#0a0a0a"]}
       style={styles.gradient}
       start={{ x: 0, y: 1 }}
       end={{ x: 1, y: 0 }}
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     ellipsizeMode: 'tail',
   },
   date: {
-    color: '#ffb6c1',
+    color: '#FFE1FF',
     fontSize: 16,
     fontWeight: '700',
     opacity: 0.9,

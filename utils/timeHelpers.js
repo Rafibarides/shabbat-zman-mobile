@@ -9,11 +9,12 @@ export const calculateAdjustedTime = (timeStr, offsetMinutes) => {
   dateObj.setHours(period === 'PM' ? hours + 12 : hours);
   dateObj.setMinutes(minutes + offsetMinutes);
 
-  return dateObj.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
+  // Format without leading zeros for hours
+  const formattedHour = dateObj.getHours() % 12 || 12; // Convert 0 to 12 for 12 AM
+  const formattedMinutes = dateObj.getMinutes().toString().padStart(2, '0');
+  const ampm = dateObj.getHours() >= 12 ? 'PM' : 'AM';
+
+  return `${formattedHour}:${formattedMinutes} ${ampm}`;
 };
 
 export const getUpcomingShabbatDates = () => {
