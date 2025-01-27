@@ -3,18 +3,46 @@ import React from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import { BlurView } from 'expo-blur';
 import { calculateAdjustedTime } from "../utils/timeHelpers";
+import Animated, { 
+  useAnimatedStyle, 
+  useSharedValue, 
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { Pressable } from 'react-native';
+import FadeIn from './FadeIn';
 
-const TimeCard = ({ icon, label, time }) => (
-  <BlurView
-    intensity={80}
-    tint="dark"
-    style={styles.timeCard}
-  >
-    <Image source={icon} style={styles.icon} resizeMode="contain" />
-    <Text style={styles.label}>{label}</Text>
-    <Text style={styles.time}>{time}</Text>
-  </BlurView>
-);
+const TimeCard = ({ icon, label, time }) => {
+  const scale = useSharedValue(1);
+  
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const onPressIn = () => {
+    scale.value = withSpring(1.05, { damping: 10 });
+  };
+
+  const onPressOut = () => {
+    scale.value = withSpring(1);
+  };
+
+  return (
+    <Pressable onPressIn={onPressIn} onPressOut={onPressOut}>
+      <Animated.View style={animatedStyle}>
+        <BlurView
+          intensity={80}
+          tint="dark"
+          style={styles.timeCard}
+        >
+          <Image source={icon} style={styles.icon} resizeMode="contain" />
+          <Text style={styles.label}>{label}</Text>
+          <Text style={styles.time}>{time}</Text>
+        </BlurView>
+      </Animated.View>
+    </Pressable>
+  );
+};
 
 export default function ShabbatTimes({ weatherData }) {
   console.log("ShabbatTimes weatherData:", weatherData);
@@ -43,28 +71,38 @@ export default function ShabbatTimes({ weatherData }) {
   const rabeinuTam = calculateAdjustedTime(astronomy.saturday.sunset, 72);
 
   return (
-    <View style={styles.container}>
-      <TimeCard
-        icon={require("../assets/images/candles.avif")}
-        label="Candle Lighting"
-        time={candleLighting}
-      />
-      <TimeCard
-        icon={require("../assets/images/siddur.avif")}
-        label="Netz Hachama"
-        time={netzHachama}
-      />
-      <TimeCard
-        icon={require("../assets/images/wine.avif")}
-        label="Shabbat Ends"
-        time={shabbatEnds}
-      />
-      <TimeCard
-        icon={require("../assets/images/clove.avif")}
-        label="Rabeinu Tam"
-        time={rabeinuTam}
-      />
-    </View>
+    <FadeIn>
+      <View style={styles.container}>
+        <FadeIn delay={200}>
+          <TimeCard
+            icon={require("../assets/images/candles.avif")}
+            label="Candle Lighting"
+            time={candleLighting}
+          />
+        </FadeIn>
+        <FadeIn delay={400}>
+          <TimeCard
+            icon={require("../assets/images/siddur.avif")}
+            label="Netz Hachama"
+            time={netzHachama}
+          />
+        </FadeIn>
+        <FadeIn delay={600}>
+          <TimeCard
+            icon={require("../assets/images/wine.avif")}
+            label="Shabbat Ends"
+            time={shabbatEnds}
+          />
+        </FadeIn>
+        <FadeIn delay={800}>
+          <TimeCard
+            icon={require("../assets/images/clove.avif")}
+            label="Rabeinu Tam"
+            time={rabeinuTam}
+          />
+        </FadeIn>
+      </View>
+    </FadeIn>
   );
 }
 

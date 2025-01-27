@@ -1,6 +1,6 @@
 // Simple placeholder component for user location input/search.
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet, ActivityIndicator, Keyboard } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function LocationSearch({ onLocationSelect }) {
@@ -32,6 +32,7 @@ export default function LocationSearch({ onLocationSelect }) {
   };
 
   const handleLocationSelect = (location) => {
+    Keyboard.dismiss();
     setQuery(location.name);
     setSuggestions([]);
     onLocationSelect(location);
@@ -45,6 +46,9 @@ export default function LocationSearch({ onLocationSelect }) {
           placeholder="Enter city or zip code..."
           placeholderTextColor="rgba(255,255,255,0.5)"
           value={query}
+          adjustsFontSizeToFit={true}
+          numberOfLines={1}
+          minimumFontSize={12}
           onChangeText={(text) => {
             setQuery(text);
             searchLocations(text);
@@ -57,14 +61,19 @@ export default function LocationSearch({ onLocationSelect }) {
 
       {suggestions.length > 0 && (
         <View style={styles.suggestionsContainer}>
-          {suggestions.map((suggestion) => (
+          {suggestions.map((location) => (
             <TouchableOpacity
-              key={`${suggestion.lat}-${suggestion.lon}`}
+              key={`${location.lat}-${location.lon}`}
               style={styles.suggestionItem}
-              onPress={() => handleLocationSelect(suggestion)}
+              onPress={() => handleLocationSelect(location)}
             >
-              <Text style={styles.suggestionText}>
-                {suggestion.name}, {suggestion.region}
+              <Text 
+                style={styles.suggestionText}
+                adjustsFontSizeToFit={true}
+                numberOfLines={1}
+                minimumFontSize={12}
+              >
+                {location.name}
               </Text>
             </TouchableOpacity>
           ))}
@@ -94,6 +103,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontFamily: 'Urbanist',
     fontSize: 16,
+    maxWidth: '100%',
   },
   loader: {
     marginLeft: 10,
@@ -114,5 +124,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontFamily: 'Urbanist',
     fontSize: 14,
+    maxWidth: '100%',
   },
 }); 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, View, ActivityIndicator, Text } from "react-native";
+import { StyleSheet, View, ActivityIndicator, Text, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -60,30 +60,36 @@ export default function HomeScreen() {
       start={{ x: 0, y: 1 }}
       end={{ x: 1, y: 0 }}
     >
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <Text 
-              style={styles.title}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              Shabbat Times for {getLocationDisplay()}
-            </Text>
-            <Text style={styles.date}>
-              {getFormattedShabbatDate()}
-            </Text>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <Text 
+                style={styles.title}
+                adjustsFontSizeToFit={true}
+                numberOfLines={1}
+              >
+                Shabbat Times for {getLocationDisplay()}
+              </Text>
+              <Text style={styles.date}>
+                {getFormattedShabbatDate()}
+              </Text>
+            </View>
+            
+            <LocationSearch onLocationSelect={handleLocationSelect} />
+            <HebrewDate />
+            
+            {isLoading ? (
+              <ActivityIndicator size="large" color="#fff" />
+            ) : (
+              <ShabbatTimes weatherData={{ ...weatherData, astronomy }} />
+            )}
           </View>
-          
-          <LocationSearch onLocationSelect={handleLocationSelect} />
-          <HebrewDate />
-          
-          {isLoading ? (
-            <ActivityIndicator size="large" color="#fff" />
-          ) : (
-            <ShabbatTimes weatherData={{ ...weatherData, astronomy }} />
-          )}
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -93,8 +99,14 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
-  container: {
+  safeArea: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   content: {
     flex: 1,
@@ -114,8 +126,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'Urbanist',
     width: '100%',
-    numberOfLines: 1,
-    ellipsizeMode: 'tail',
   },
   date: {
     color: '#FFE1FF',
