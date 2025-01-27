@@ -1,7 +1,10 @@
-import React, { useState } from "react";
-import { StyleSheet, View, ActivityIndicator, Text, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, View, ActivityIndicator, Text, ScrollView, TouchableOpacity, Alert, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as Notifications from 'expo-notifications';
+import * as Location from 'expo-location';
+import * as Clipboard from 'expo-clipboard';
 
 import LocationSearch from "../components/LocationSearch";
 import ShabbatTimes from "../components/ShabbatTimes";
@@ -9,6 +12,79 @@ import HebrewDate from "../components/HebrewDate";
 import useGeolocation from "../hooks/useGeolocation";
 import useWeatherApi from "../hooks/useWeatherApi";
 import { getUpcomingShabbatDates } from '../utils/timeHelpers';
+
+const getShabbatTimesForLocation = async (latitude, longitude) => {
+  try {
+    const response = await fetch(
+      `https://www.hebcal.com/shabbat?cfg=json&latitude=${latitude}&longitude=${longitude}&geo=pos`
+    );
+    const data = await response.json();
+    return data.items?.find(item => item.category === "candles")?.date || null;
+  } catch (error) {
+    console.error('Error fetching Shabbat times:', error);
+    return null;
+  }
+};
+
+const scheduleShabbatNotifications = async (shabbatEnd) => {
+  // Cancel any existing notifications first
+  await Notifications.cancelAllScheduledNotificationsAsync();
+
+  // Get current location permission status
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  
+  if (status === 'granted') {
+    try {
+      const location = await Location.getCurrentPositionAsync({});
+      const candleLightingTime = await getShabbatTimesForLocation(
+        location.coords.latitude,
+        location.coords.longitude
+      );
+
+      if (candleLightingTime) {
+        // Schedule Friday 10 AM notification
+        const fridayNotification = new Date(candleLightingTime);
+        fridayNotification.setHours(10, 0, 0, 0); // Set to 10:00 AM
+        
+        if (fridayNotification > new Date()) {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Shabbat Reminder",
+              body: "Don't forget to check what time Shabbat starts!",
+              sound: Platform.OS === 'ios' ? 'notification.wav' : 'notification.mp3',
+              priority: 'high',
+            },
+            trigger: {
+              date: fridayNotification,
+              channelId: 'default',
+            },
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error scheduling Friday notification:', error);
+    }
+  }
+
+  // Schedule Shavua Tov notification (1 hour after Shabbat ends)
+  const shabbatEndTime = new Date(shabbatEnd);
+  const shavuaTovTime = new Date(shabbatEndTime.getTime() + 60 * 60 * 1000); // Add 1 hour
+  
+  if (shavuaTovTime > new Date()) {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Shavua Tov!",
+        body: "Have a wonderful week!",
+        sound: Platform.OS === 'ios' ? 'notification.wav' : 'notification.mp3',
+        priority: 'high',
+      },
+      trigger: {
+        date: shavuaTovTime,
+        channelId: 'default',
+      },
+    });
+  }
+};
 
 export default function HomeScreen() {
   const { location, error: locationError } = useGeolocation();
@@ -19,6 +95,13 @@ export default function HomeScreen() {
     longitude: selectedLocation?.lon || location?.longitude,
     city: selectedLocation?.name,
   });
+
+  // Schedule notifications when weather data updates
+  useEffect(() => {
+    if (weatherData?.shabbat?.havdalah) {
+      scheduleShabbatNotifications(weatherData.shabbat.havdalah);
+    }
+  }, [weatherData]);
 
   const handleLocationSelect = (location) => {
     setSelectedLocation(location);
@@ -37,15 +120,11 @@ export default function HomeScreen() {
   // Get formatted date for the upcoming Friday
   const getFormattedShabbatDate = () => {
     const { friday } = getUpcomingShabbatDates();
-
-    // Safely parse the Friday date at local midday to avoid UTC shifting
     const [year, month, day] = friday.split('-').map(Number);
-    const localMidday = new Date(year, month - 1, day, 12);
-
-    return localMidday.toLocaleDateString('en-US', {
+    return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+      weekday: 'long',
       month: 'long',
       day: 'numeric',
-      year: 'numeric'
     });
   };
 

@@ -1,6 +1,6 @@
 // Simple placeholder component for displaying Shabbat times.
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet, Image, Platform } from "react-native";
 import { BlurView } from 'expo-blur';
 import { calculateAdjustedTime } from "../utils/timeHelpers";
 import Animated, { 
@@ -75,28 +75,44 @@ export default function ShabbatTimes({ weatherData }) {
       <View style={styles.container}>
         <FadeIn delay={200}>
           <TimeCard
-            icon={require("../assets/images/candles.avif")}
+            icon={
+              Platform.OS === "ios"
+                ? require("../assets/images/candles.avif")
+                : require("../assets/images/candles.png")
+            }
             label="Candle Lighting"
             time={candleLighting}
           />
         </FadeIn>
         <FadeIn delay={400}>
           <TimeCard
-            icon={require("../assets/images/siddur.avif")}
+            icon={
+              Platform.OS === "ios"
+                ? require("../assets/images/siddur.avif")
+                : require("../assets/images/siddur.png")
+            }
             label="Netz Hachama"
             time={netzHachama}
           />
         </FadeIn>
         <FadeIn delay={600}>
           <TimeCard
-            icon={require("../assets/images/wine.avif")}
+            icon={
+              Platform.OS === "ios"
+                ? require("../assets/images/wine.avif")
+                : require("../assets/images/wine.png")
+            }
             label="Shabbat Ends"
             time={shabbatEnds}
           />
         </FadeIn>
         <FadeIn delay={800}>
           <TimeCard
-            icon={require("../assets/images/clove.avif")}
+            icon={
+              Platform.OS === "ios"
+                ? require("../assets/images/clove.avif")
+                : require("../assets/images/clove.png")
+            }
             label="Rabeinu Tam"
             time={rabeinuTam}
           />
@@ -128,7 +144,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 5,
-    elevation: 5,
+    elevation: 2,
   },
   icon: {
     width: 24,
