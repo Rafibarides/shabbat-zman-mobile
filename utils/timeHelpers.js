@@ -21,12 +21,14 @@ export const getUpcomingShabbatDates = () => {
   const dayOfWeek = today.getDay(); // 0 is Sunday, 6 is Saturday
 
   let fridayDate = new Date(today);
+  
   if (dayOfWeek === 6) { // If Saturday, get yesterday
     fridayDate.setDate(today.getDate() - 1);
   } else if (dayOfWeek === 5) { // If Friday, use today
     // keep today's date
   } else { // Otherwise, get next Friday
-    fridayDate.setDate(today.getDate() + ((5 + 7 - dayOfWeek) % 7));
+    const daysUntilFriday = (5 - dayOfWeek + 7) % 7;
+    fridayDate.setDate(today.getDate() + daysUntilFriday);
   }
 
   const saturdayDate = new Date(fridayDate);

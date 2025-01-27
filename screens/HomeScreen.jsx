@@ -1,5 +1,5 @@
-import React from "react";
-import { StyleSheet, View, ActivityIndicator } from "react-native";
+import React, { useState } from "react";
+import { StyleSheet, View, ActivityIndicator, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -8,13 +8,46 @@ import ShabbatTimes from "../components/ShabbatTimes";
 import HebrewDate from "../components/HebrewDate";
 import useGeolocation from "../hooks/useGeolocation";
 import useWeatherApi from "../hooks/useWeatherApi";
+import { getUpcomingShabbatDates } from '../utils/timeHelpers';
 
 export default function HomeScreen() {
   const { location, error: locationError } = useGeolocation();
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  
   const { data: weatherData, astronomy, error: weatherError, isLoading } = useWeatherApi({
-    latitude: location?.latitude,
-    longitude: location?.longitude,
+    latitude: selectedLocation?.lat || location?.latitude,
+    longitude: selectedLocation?.lon || location?.longitude,
+    city: selectedLocation?.name,
   });
+
+  const handleLocationSelect = (location) => {
+    setSelectedLocation(location);
+  };
+
+  // Get the location display name
+  const getLocationDisplay = () => {
+    if (selectedLocation) {
+      return `${selectedLocation.name}, ${selectedLocation.region}`;
+    }
+    return weatherData?.location?.name 
+      ? `${weatherData.location.name}, ${weatherData.location.region}`
+      : 'Loading location...';
+  };
+
+  // Get formatted date for the upcoming Friday
+  const getFormattedShabbatDate = () => {
+    const { friday } = getUpcomingShabbatDates();
+
+    // Safely parse the Friday date at local midday to avoid UTC shifting
+    const [year, month, day] = friday.split('-').map(Number);
+    const localMidday = new Date(year, month - 1, day, 12);
+
+    return localMidday.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
 
   console.log('Location:', location);
   console.log('Weather Error:', weatherError);
@@ -29,8 +62,22 @@ export default function HomeScreen() {
     >
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
+          <View style={styles.header}>
+            <Text 
+              style={styles.title}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              Shabbat Times for {getLocationDisplay()}
+            </Text>
+            <Text style={styles.date}>
+              {getFormattedShabbatDate()}
+            </Text>
+          </View>
+          
+          <LocationSearch onLocationSelect={handleLocationSelect} />
           <HebrewDate />
-          <LocationSearch />
+          
           {isLoading ? (
             <ActivityIndicator size="large" color="#fff" />
           ) : (
@@ -51,8 +98,33 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 20,
-    gap: 20, // Spacing between components
+    padding: 40,
+    paddingTop: 80,
+    gap: 20,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 8,
+    width: '100%',
+  },
+  title: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+    fontFamily: 'Urbanist',
+    width: '100%',
+    numberOfLines: 1,
+    ellipsizeMode: 'tail',
+  },
+  date: {
+    color: '#ffb6c1',
+    fontSize: 16,
+    fontWeight: '700',
+    opacity: 0.9,
+    marginTop: 4,
+    textAlign: 'center',
+    fontFamily: 'Urbanist',
   },
 });
 

@@ -78,12 +78,12 @@ export default function ShabbatTimes({ weatherData }) {
 const styles = StyleSheet.create({
   container: {
     gap: 12,
-    padding: 16,
+    padding: 0,
   },
   timeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 15,
     borderRadius: 25, // Pill shape
     backgroundColor: 'rgba(255,255,255,0.1)',
     shadowColor: '#000',
